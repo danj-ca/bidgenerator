@@ -1,0 +1,90 @@
+body {
+	background: rgba(0,0,0,0.6);
+	color: white;
+}
+
+/* Add space between 'rows' */
+.row {
+	margin-bottom: 10px;
+}
+
+/* site region-specific styles */
+#leaderboard {
+	text-align: center;    
+}
+
+#logo {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+#nav_container {
+
+}
+
+
+#fwd_nav {
+	text-align: right;
+}
+
+#social_links {
+	margin-top: 25px;
+	margin-bottom: 25px;
+}
+
+a
+{
+	/* Color taken from Bootstrap's alert button color
+	   So text links are the same red as the nav button background,
+	   and so Disqus will hopefully shade itself accordingly... */
+	color: #CC0000;
+}
+
+i {
+	vertical-align: baseline !important;
+}
+
+/*
+#prev_nav_link,
+#fwd_nav_link
+{
+	width: 100%;
+}
+*/
+
+/* Sticky footer styles
+-------------------------------------------------- */
+
+html,
+body {
+height: 100%;
+/* The html and body elements cannot have any padding or margin. */
+}
+
+/* Wrapper for page content to push down footer */
+#wrap {
+min-height: 100%;
+height: auto !important;
+height: 100%;
+/* Negative indent footer by it's height */
+margin: 0 auto -60px;
+}
+
+/* Set the fixed height of the footer here */
+#push,
+#footer {
+height: 60px;
+}
+#footer {
+background-color: rgba(0,0,0,0.5);
+}
+
+/* Lastly, apply responsive CSS fixes as necessary */
+@media (max-width: 767px) {
+#footer {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+}

@@ -1,0 +1,90 @@
+!!!
+%html
+	%head
+		%link{ rel: "stylesheet",  href: "css/bootstrap.min.css" }
+		%link{ rel: "stylesheet",  href: "css/bidStyle.css" }
+		-# TODO %meta...
+		%title
+			= "Bob is Doomed - A Paranormal Office Comic Strip #{ (is_last) ? 'by Dan Adams-Jacobson and Christopher Provencher' : 'for ' + post_date.strftime('%A, %B %-d %Y') }"
+	%body
+		#wrap
+			.container
+				.row
+					#logo.span2
+						%a{ href: "http://bobisdoomed.com", title: "Bob is Doomed" }
+							%img{ src: "img/bid_site_logo.png", alt: "Bob is Doomed" }
+					#leaderboard.span10 &nbsp;
+				.row
+					#comic_strip.span12
+						%img#comic_image{ src: "strips/#{strip_filename}", alt: "Bob is Doomed strip for #{post_date.strftime('%A, %B %-d %Y')}", title: "Bob is Doomed strip for #{post_date.strftime('%A, %B %-d %Y')}" }
+				#nav_container.row
+					#prev_nav.span6
+						- if (is_first)
+							%span.btn.btn-large.btn-inverse.disabled
+								%img{ src: "img/prev.png", alt: "Previous Comic" }
+							%span.btn.btn-large.btn-inverse.disabled
+								%img{ src: "img/first.png", alt: "First Comic" }
+						- else
+							%a.btn.btn-large.btn-inverse{ href: "#{prev_page}", title: "Previous Comic"} 
+								%img{ src: "img/prev.png", alt: "Previous Comic" }
+							%a.btn.btn-large.btn-inverse{ href: "#{first_page}", title: "First Comic"} 
+								%img{ src: "img/first.png", alt: "First Comic" }								
+					#fwd_nav.span6
+						- if (is_last)
+							%span.btn.btn-large.btn-inverse.disabled
+								%img{ src: "img/latest.png", alt: "Latest Comic" }
+							%span.btn.btn-large.btn-inverse.disabled
+								%img{ src: "img/next.png", alt: "Next Comic" }
+						- else
+							%a.btn.btn-large.btn-inverse{ href: "/", title: "Latest Comic"} 
+								%img{ src: "img/latest.png", alt: "Latest Comic" }
+							%a.btn.btn-large.btn-inverse{ href: "#{next_page}", title: "Next Comic"} 
+								%img{ src: "img/next.png", alt: "Next Comic" }								
+				.row
+					#social_links.span6
+						Join us on the social network of your choice!
+						%a{ href: 'http://twitter.com/bobisdoomed', title: 'Follow Bob is Doomed on Twitter' }
+							%img{ src: 'img/tt-icon.png', alt: 'Follow Bob is Doomed on Twitter' }
+						%a{ href: 'http://facebook.com/bobisdoomed', title: 'Bob is Doomed on Facebook' }
+							%img{ src: 'img/fk-icon.png', alt: 'Bob is Doomed on Facebook' }
+						%a{ href: 'http://plus.google.com/105549978834764099190/posts', title: 'Bob is Doomed on Google+' }
+							%img{ src: 'img/gp-icon.png', alt: 'Bob is Doomed on Google+' }
+				.row
+					#disqus_thread.span6
+					:javascript
+						var disqus_shortname = 'bobisdoomed'; // required: identifies your disqus forum
+		
+						/*
+						 * this should be unique to each *strip*, so comments stay with the right strips even if we change URLs of pages, 
+						 * or move strips around. The form bid_XX_YYY should suffice, following the naming convention for the PSDs.
+						 */
+						var disqus_identifier = 'bid_#{strip_volume}_#{strip_number}';  	            
+						
+						/*
+						 * the URL of the current page. Mostly used to avoid breakage when querystring parameters are used, 
+						 * but we're generating these pages dynamically so we may as well just supply this, too
+						 */
+						var disqus_url = 'http://bobisdoomed.com/#{this_page}'; 
+						
+						/*
+						 * the title for the forum thread. Inferred from the <title> tag, but can be specified here. 
+						 * We probably want something like "Bob is Doomed, Volume X, Strip Y".
+						 */
+						var disqus_title = 'Comments on Bob is Doomed strip for #{post_date.strftime('%A, %B %-d %Y')}';
+						
+						(function() {
+						    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+						    dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+						    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+						})();
+					%noscript 
+						.alert.alert-error Please enable JavaScript to see and add comments on this strip.
+					
+					#blog.span6
+			#push
+		#footer
+			.container
+				-# %p.muted So I can just type anything and it will show up here?
+		
+		%script{ src: "http://code.jquery.com/jquery-latest.js" }
+		%script{ src: "js/bootstrap.min.js" }
