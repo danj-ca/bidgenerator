@@ -1,23 +1,31 @@
+require 'date'
 require 'haml'
 require 'rmagick'
 
 include Magick
 
+startTime = Time.now
+pageTime = 0
+stripTime = 0
+puts "BiD Generator started at #{startTime}."
 #Settings are hard-coded in the script for now. Eventually move to command-line and/or YAML file, perhaps
 
-input_folder = '~/Dropbox/Chris Share/Bob is Doomed/PSDs'
+input_folder = './bidTestImages'
 output_folder = './bidTestOutput'
-strip_blacklist = [01-011, 01-014]
+strip_blacklist = ['01-011', '01-014']
 #Given a filename PATTERN, for eg. "bid_XX_YYY.jpg" where XX and YYY are monotonically-increasing volume and strip numbers, respectively
 strip_filename_pattern = /bid_([0-9]{2})_([0-9]{3}).psd/
 #Date that the first (earliest) strip should be posted
-start_date = '2012-12-26'
+start_date = Date.parse('2012-12-26')
 haml_template_filename = './bidTemplate.haml'
 # post_weekdays contains a list of days of the week on which strips will be posted; (0 = Sunday, 1 = Monday, ... , 6 = Saturday)
 post_weekdays = [1, 3, 5]
 
 #test output settings
-puts settings
+puts "# Settings"
+puts "# input: #{input_folder} | output: #{output_folder} | strip pattern: #{strip_filename_pattern} | page template: #{haml_template_filename}"
+puts "# start date: #{start_date} | post weekdays: #{post_weekdays} | blacklist: #{strip_blacklist} "
+puts
 
 
 def next_weekday(current_date, target_weekdays = [])
@@ -38,6 +46,8 @@ engine = Haml::Engine.new(template, { format: :html5 })
 relevant_files = Dir.new(input_folder).select do |filename| 
 	filename =~ strip_filename_pattern and !strip_blacklist.include?("#{$1}-#{$2}")
 end.sort
+
+puts "Found #{relevant_files.count} input files."
 
 post_date = start_date
 first_page = ''
@@ -81,6 +91,8 @@ relevant_files.each_with_index do |filename, index|
 		first_page = page_filename
 	end
 	
+	puts "* Processing file #{index}:#{filename} (first: #{is_first} last: #{is_last} penultimate: #{is_penultimate} | strip: #{strip_filename} | page: #{page_filename} )"
+	puts "** previous post: #{previous_post_date} (#{previous_post_filename}) | next post: #{next_post_date} (#{next_post_filename})"
 ### variables expected by the haml template:
 # strip_filename
 # strip_volume (as XX)
@@ -93,14 +105,41 @@ relevant_files.each_with_index do |filename, index|
 # is_last (boolean if this page is the index (last) page)
 # is_first (boolean if this page is the first page)
 
+	stopwatch = Time.now
+	
 	output = engine.render(Object.new, strip_filename: strip_filename, strip_volume: volume, strip_number: strip, post_date: post_date,
 								   prev_page: previous_post_filename, next_page: next_post_filename, this_page: page_filename, first_page: first_page,
 								   is_first: is_first, is_last: is_last)
-								   
-	File.open("#{output_folder}/#{page_filename}", 'w') { |file| file.write(output) }
-	inputImage = ImageList.new("#{input_folder}/#{filename}")
-	inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{strip_filename}")
 
+	elapsed = Time.now - stopwatch
+	pageTime += elapsed
+	puts "*** Rendered #{page_filename} in #{elapsed} seconds."
+	
+	stopwatch = Time.now							   
+	
+	File.open("#{output_folder}/#{page_filename}", 'w') { |file| file.write(output) }
+	
+	elapsed = Time.now - stopwatch
+	pageTime += elapsed
+	puts "*** Wrote #{page_filename} in #{elapsed} seconds."
+	
+	stopwatch = Time.now
+	
+	inputImage = ImageList.new("#{input_folder}/#{filename}")
+	
+	elapsed = Time.now - stopwatch
+	stripTime += elapsed
+	puts "*** Read #{filename} in #{elapsed} seconds."
+	
+	stopwatch = Time.now
+	
+	inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{strip_filename}")
+	
+	elapsed = Time.now - stopwatch
+	stripTime += elapsed
+	puts "*** Created and wrote #{strip_filename} in #{elapsed} seconds."
+
+	puts
 	# puts "Volume: #{volume} Strip: #{strip} Post date: #{post_date}"
 # 	puts "\tis first: #{is_first} is last: #{is_last}"
 # 	puts "\tstrip: #{strip_filename}, page: #{page_filename}"
@@ -111,7 +150,8 @@ relevant_files.each_with_index do |filename, index|
 end #relevant_files.each_with_index
 
 
-
+puts "BiD Generator finished processing #{relevant_files.count} strips in #{Time.now - startTime} seconds."
+puts "Time spent rendering pages: #{pageTime} seconds | Time spent exporting images: #{stripTime} seconds."
 
 
 #For each entry in the hash
