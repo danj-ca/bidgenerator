@@ -1,22 +1,20 @@
 require 'haml'
-require 'yaml'
 require 'rmagick'
 
 include Magick
 
-settings = YAML.load_file("./generator_settings.yml")
+#Settings are hard-coded in the script for now. Eventually move to command-line and/or YAML file, perhaps
 
-# Grab settings into local variables
-
-input_folder = settings['input_folder']
-output_folder = settings['output_folder']
-strip_blacklist = settings['blacklist']
+input_folder = '~/Dropbox/Chris Share/Bob is Doomed/PSDs'
+output_folder = './bidTestOutput'
+strip_blacklist = [01-011, 01-014]
 #Given a filename PATTERN, for eg. "bid_XX_YYY.jpg" where XX and YYY are monotonically-increasing volume and strip numbers, respectively
-strip_filename_pattern = settings['strip_filename_pattern']
+strip_filename_pattern = /bid_([0-9]{2})_([0-9]{3}).psd/
 #Date that the first (earliest) strip should be posted
-start_date = settings['start_date']
-haml_template_filename = settings['page_template']
-post_weekdays = settings['post_weekdays']
+start_date = '2012-12-26'
+haml_template_filename = './bidTemplate.haml'
+# post_weekdays contains a list of days of the week on which strips will be posted; (0 = Sunday, 1 = Monday, ... , 6 = Saturday)
+post_weekdays = [1, 3, 5]
 
 #test output settings
 puts settings
@@ -33,7 +31,7 @@ end
 #Create a hash of the filenames in DIR that match PATTERN, in order of increasing XXXX-then-YYYY
 #With hash keys that are dates such that the first item has a date of START_DATE, and
 #Subsequent items n have a date-key calculated via function next_post_date(n-1)
-template = File.read("#{input_folder}/#{haml_template_filename}")
+template = File.read(haml_template_filename)
 
 engine = Haml::Engine.new(template, { format: :html5 })
 
