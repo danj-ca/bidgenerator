@@ -3,9 +3,25 @@
 	%head
 		%link{ rel: "stylesheet",  href: "css/bootstrap.min.css" }
 		%link{ rel: "stylesheet",  href: "css/bidStyle.css" }
+		
+		%link{ rel: "shortcut icon", type: "image/x-icon", href: "img/favicon.ico" }
+		%link{ rel: "apple-touch-icon", href: "img/bid-touch-icon-iphone.png" }
+		%link{ rel: "apple-touch-icon", sizes: "72x72", href: "img/bid-touch-icon-ipad.png" }
+		%link{ rel: "apple-touch-icon", sizes: "114x114", href: "img/bid-touch-icon-iphone-retina.png" }
+		%link{ rel: "apple-touch-icon", sizes: "144x144", href: "img/bid-touch-icon-ipad-retina.png" }
 		-# TODO %meta...
 		%title
 			= "Bob is Doomed - A Paranormal Office Comic Strip #{ (is_last) ? 'by Dan Adams-Jacobson and Christopher Provencher' : 'for ' + post_date.strftime('%A, %B %-d %Y') }"
+		:javascript
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-38084513-1']);
+			_gaq.push(['_trackPageview']);
+			
+			(function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			})();			
 	%body
 		#wrap
 			.container

@@ -123,22 +123,24 @@ relevant_files.each_with_index do |filename, index|
 	pageTime += elapsed
 	puts "*** Wrote #{page_filename} in #{elapsed} seconds."
 	
-	stopwatch = Time.now
+	if (!File.exists?("#{output_folder}/strips/#{strip_filename}"))
+		stopwatch = Time.now
+		
+		inputImage = ImageList.new("#{input_folder}/#{filename}")
+		
+		elapsed = Time.now - stopwatch
+		stripTime += elapsed
+		puts "*** Read #{filename} in #{elapsed} seconds."
+		
+		stopwatch = Time.now
+		
+		inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{strip_filename}")
+		
+		elapsed = Time.now - stopwatch
+		stripTime += elapsed
+		puts "*** Created and wrote #{strip_filename} in #{elapsed} seconds."
+	end
 	
-	inputImage = ImageList.new("#{input_folder}/#{filename}")
-	
-	elapsed = Time.now - stopwatch
-	stripTime += elapsed
-	puts "*** Read #{filename} in #{elapsed} seconds."
-	
-	stopwatch = Time.now
-	
-	inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{strip_filename}")
-	
-	elapsed = Time.now - stopwatch
-	stripTime += elapsed
-	puts "*** Created and wrote #{strip_filename} in #{elapsed} seconds."
-
 	puts
 	# puts "Volume: #{volume} Strip: #{strip} Post date: #{post_date}"
 # 	puts "\tis first: #{is_first} is last: #{is_last}"
