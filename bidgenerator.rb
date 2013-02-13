@@ -11,7 +11,7 @@ puts "BiD Generator started at #{startTime}."
 #Settings are hard-coded in the script for now. Eventually move to command-line and/or YAML file, perhaps
 
 input_folder = './bidTestImages'
-output_folder = './bidTestOutput'
+output_folder = "#{Dir.home}/Sites/bobisdoomed"
 strip_blacklist = ['01-011', '01-014']
 #Given a filename PATTERN, for eg. "bid_XX_YYY.jpg" where XX and YYY are monotonically-increasing volume and strip numbers, respectively
 strip_filename_pattern = /bid_([0-9]{2})_([0-9]{3}).psd/
@@ -78,14 +78,13 @@ relevant_files.each_with_index do |filename, index|
 			break if post_weekdays.include?(next_post_date.wday)
 		end	
 		
-		next_post_filename = (is_penultimate) ? "index.html" : "bid-#{next_post_date.strftime("%Y-%m-%d")}.html"
+		next_post_filename = "bid-#{next_post_date.strftime("%Y-%m-%d")}.html"
 	end
-	
 	
 	this_filename_token = "bid-#{post_date.strftime("%Y-%m-%d")}"
 
 	strip_filename = "#{this_filename_token}.jpg"
-	page_filename = (is_last) ? "index.html" : "#{this_filename_token}.html"
+	page_filename = "#{this_filename_token}.html"
 	
 	if (is_first)
 		first_page = page_filename
@@ -102,15 +101,16 @@ relevant_files.each_with_index do |filename, index|
 # next_page (filename of next page
 # this_page (filename of this page)
 # first_page (filename of the first page)
-# is_last (boolean if this page is the index (last) page)
+# is_last (boolean if this page is the last page)
+# is_index (boolean if this page is the actual index.html page)
 # is_first (boolean if this page is the first page)
 
 	stopwatch = Time.now
 	
 	output = engine.render(Object.new, strip_filename: strip_filename, strip_volume: volume, strip_number: strip, post_date: post_date,
 								   prev_page: previous_post_filename, next_page: next_post_filename, this_page: page_filename, first_page: first_page,
-								   is_first: is_first, is_last: is_last)
-
+								   is_first: is_first, is_last: is_last, is_index: false)
+								   	
 	elapsed = Time.now - stopwatch
 	pageTime += elapsed
 	puts "*** Rendered #{page_filename} in #{elapsed} seconds."
@@ -122,6 +122,25 @@ relevant_files.each_with_index do |filename, index|
 	elapsed = Time.now - stopwatch
 	pageTime += elapsed
 	puts "*** Wrote #{page_filename} in #{elapsed} seconds."
+	
+	# Generate the index page separately, so its "archive" page always exists
+	if (is_last)
+		output = engine.render(Object.new, strip_filename: strip_filename, strip_volume: volume, strip_number: strip, post_date: post_date,
+									   prev_page: previous_post_filename, next_page: next_post_filename, this_page: page_filename, first_page: first_page,
+									   is_first: is_first, is_last: is_last, is_index: true)
+									   	
+		elapsed = Time.now - stopwatch
+		pageTime += elapsed
+		puts "*** Rendered index.html in #{elapsed} seconds."
+		
+		stopwatch = Time.now							   
+		
+		File.open("#{output_folder}/index.html", 'w') { |file| file.write(output) }
+		
+		elapsed = Time.now - stopwatch
+		pageTime += elapsed
+		puts "*** Wrote index.html in #{elapsed} seconds."
+	end
 	
 	if (!File.exists?("#{output_folder}/strips/#{strip_filename}"))
 		stopwatch = Time.now
@@ -154,27 +173,3 @@ end #relevant_files.each_with_index
 
 puts "BiD Generator finished processing #{relevant_files.count} strips in #{Time.now - startTime} seconds."
 puts "Time spent rendering pages: #{pageTime} seconds | Time spent exporting images: #{stripTime} seconds."
-
-
-#For each entry in the hash
-#Apply TEMPLATE to generate a file OUTPUT
-
-#Where OUTPUT is an HTML file named using the pattern "bid_XXXX_YYYY.html" (or should we use the datestamp for some reason?)
-
-#Where TEMPLATE is such that OUTPUT links to the filename of the current hash entry (with an appropriate relative path to the remote images folder)
-#And the Next and Previous (and perhaps First, etc.) links reference the appropriate pages (this is where it may be sensible to use dates in the page names, because we can easily get the next/previous keys from the hash)
-#And the page contains the DISQUS id and other page-specific identifiers needed for integration with other services
-#These must be generated consistently for a given strip, so should probably use its strip ID, not the date, so that the appropriate comments always stay on each strip
-
-#UNLESS the entry in the hash is the last entry, in which case,
-#Apply template, but name the OUTPUT file "index.html", possibly applying a different TEMPLATE (or at least different partials) for whatever styling we only want on the frontpage (don't have a Next Strip link, etc. 
-
-#Maybe have a blog?
-#If we have a blog, should use some text template format (YAML?) and just save text files in a separately-specified or sub-folder from DIR
-#Align blogs with specific strips (or specific dates, optionally?) and have a place in the TEMPLATE where any related blog content goes?
-#If we have a blog at all, it should be brief, or link to a longer article elsewhere (my blog or Chris's; if we wants to post about art, perhaps we should have people go offsite to his own blog for that? Discuss with Steph.)
-
-
-
-
-

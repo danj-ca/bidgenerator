@@ -11,7 +11,7 @@
 		%link{ rel: "apple-touch-icon", sizes: "144x144", href: "img/bid-touch-icon-ipad-retina.png" }
 		-# TODO %meta...
 		%title
-			= "Bob is Doomed - A Paranormal Office Comic Strip #{ (is_last) ? 'by Dan Adams-Jacobson and Christopher Provencher' : 'for ' + post_date.strftime('%A, %B %-d %Y') }"
+			= "Bob is Doomed - A Paranormal Office Comic Strip #{ (is_index) ? 'by Dan Adams-Jacobson and Christopher Provencher' : 'for ' + post_date.strftime('%A, %B %-d %Y') }"
 		:javascript
 			var _gaq = _gaq || [];
 			_gaq.push(['_setAccount', 'UA-38084513-1']);
@@ -71,16 +71,17 @@
 						var disqus_shortname = 'bobisdoomed'; // required: identifies your disqus forum
 		
 						/*
-						 * this should be unique to each *strip*, so comments stay with the right strips even if we change URLs of pages, 
-						 * or move strips around. The form bid_XX_YYY should suffice, following the naming convention for the PSDs.
-						 */
-						var disqus_identifier = 'bid_#{strip_volume}_#{strip_number}';  	            
-						
-						/*
 						 * the URL of the current page. Mostly used to avoid breakage when querystring parameters are used, 
 						 * but we're generating these pages dynamically so we may as well just supply this, too
 						 */
 						var disqus_url = 'http://bobisdoomed.com/#{this_page}'; 
+						
+						/*
+						 * Been having problems with this, so just make it the same as the URL
+						 */
+						var disqus_identifier = disqus_url;  	            
+						
+						
 						
 						/*
 						 * the title for the forum thread. Inferred from the <title> tag, but can be specified here. 
