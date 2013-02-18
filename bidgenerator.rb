@@ -53,13 +53,64 @@ post_date = start_date
 first_page = ''
 #TODO restructure this, because if we can just pull all relevant files into a hash keyed by datestamp, a lot of the fiddly logic below goes away when we iterate over the hash instead. And I bet there's a one-liner to transform an array into a hash
 
+# what ought to be encapsulated in a strip class?
+# - volume, strip numbers
+# - post date
+# - id of next, previous strips, if any
+# - getters to spit name of current strip, page, image, prev / next pages
+# - is_first, is_last
+class Strip
+	attr_reader :volume_number, :strip_number, :post_date, :prev_date, :next_date, :is_first, :is_last
+	
+	def initialize(voln, stripn, pdate, prev_date, next_date, is_first, is_last)
+		@volume_number = voln
+		@strip_number = stripn
+		@post_date = pdate
+		@next_date = next_date
+		@prev_date = prev_date
+		@is_first = is_first
+		@is_last = is_last
+	end
+	
+	def identifier
+		"#{@volume_number}-#{@strip_number}"
+	end
+	
+	def image_name
+		"bid-#{@post_date.strftime("%Y-%m-%d")}.jpg"
+	end
+	
+	def page_name
+		"bid-#{@post_date.strftime("%Y-%m-%d")}.html"
+	end
+	
+	def prev_page_name
+		if @prev_date
+			"bid-#{@prev_date.strftime("%Y-%m-%d")}.html"
+		else
+			nil
+		end
+	end
+	
+	def next_page_name
+		if @next_date
+			"bid-#{@next_date.strftime("%Y-%m-%d")}.html"
+		else
+			nil
+		end
+	end
+	
+	def to_s
+		"Strip #{identifier}: #{page_name} first: #{is_first} prev: #{prev_page_name} last: #{is_last} next: #{next_page_name}"
+	end
+end
+
 relevant_files.each_with_index do |filename, index|
 
 	volume, strip = filename.scan(strip_filename_pattern).flatten
 	
 	is_first = index == 0
 	is_last = index == relevant_files.count - 1
-	is_penultimate = index == relevant_files.count - 2
 	
 	if (!is_first)
 		previous_post_date = post_date
@@ -67,8 +118,6 @@ relevant_files.each_with_index do |filename, index|
 			previous_post_date = previous_post_date.prev_day
 			break if post_weekdays.include?(previous_post_date.wday)
 		end	
-		
-		previous_post_filename = "bid-#{previous_post_date.strftime("%Y-%m-%d")}.html"
 	end
 	
 	if (!is_last)
@@ -77,61 +126,61 @@ relevant_files.each_with_index do |filename, index|
 			next_post_date = next_post_date.next_day
 			break if post_weekdays.include?(next_post_date.wday)
 		end	
+	end
+	
+	current_strip = Strip.new(volume, strip, post_date, previous_post_date, next_post_date, is_first, is_last)
 		
-		next_post_filename = "bid-#{next_post_date.strftime("%Y-%m-%d")}.html"
-	end
-	
-	this_filename_token = "bid-#{post_date.strftime("%Y-%m-%d")}"
-
-	strip_filename = "#{this_filename_token}.jpg"
-	page_filename = "#{this_filename_token}.html"
-	
 	if (is_first)
-		first_page = page_filename
+		first_page = current_strip.page_name
 	end
 	
-	puts "* Processing file #{index}:#{filename} (first: #{is_first} last: #{is_last} penultimate: #{is_penultimate} | strip: #{strip_filename} | page: #{page_filename} )"
-	puts "** previous post: #{previous_post_date} (#{previous_post_filename}) | next post: #{next_post_date} (#{next_post_filename})"
-### variables expected by the haml template:
-# strip_filename
-# strip_volume (as XX)
-# strip_number (as XXX)
-# post_date (date this strip is posted)
-# prev_page (filename of previous page)
-# next_page (filename of next page
-# this_page (filename of this page)
-# first_page (filename of the first page)
-# is_last (boolean if this page is the last page)
-# is_index (boolean if this page is the actual index.html page)
-# is_first (boolean if this page is the first page)
+	puts "* Processing file #{index}:#{filename} (#{current_strip.to_s})"
 
 	stopwatch = Time.now
 	
-	output = engine.render(Object.new, strip_filename: strip_filename, strip_volume: volume, strip_number: strip, post_date: post_date,
-								   prev_page: previous_post_filename, next_page: next_post_filename, this_page: page_filename, first_page: first_page,
-								   is_first: is_first, is_last: is_last, is_index: false)
+	output = engine.render(Object.new, 
+						   strip_filename: current_strip.image_name, 
+						   strip_volume: current_strip.volume_number, 
+						   strip_number: current_strip.strip_number, 
+						   post_date: current_strip.post_date,
+						   prev_page: current_strip.prev_page_name, 
+						   next_page: current_strip.next_page_name, 
+						   this_page: current_strip.page_name, 
+						   first_page: first_page,
+						   is_first: current_strip.is_first, 
+						   is_last: current_strip.is_last, 
+						   is_index: false)
 								   	
 	elapsed = Time.now - stopwatch
 	pageTime += elapsed
-	puts "*** Rendered #{page_filename} in #{elapsed} seconds."
+	puts "*** Rendered #{current_strip.page_name} in #{'%.3f' % elapsed} seconds."
 	
 	stopwatch = Time.now							   
 	
-	File.open("#{output_folder}/#{page_filename}", 'w') { |file| file.write(output) }
+	File.open("#{output_folder}/#{current_strip.page_name}", 'w') { |file| file.write(output) }
 	
 	elapsed = Time.now - stopwatch
 	pageTime += elapsed
-	puts "*** Wrote #{page_filename} in #{elapsed} seconds."
+	puts "*** Wrote #{current_strip.page_name} in #{'%.3f' % elapsed} seconds."
 	
 	# Generate the index page separately, so its "archive" page always exists
 	if (is_last)
-		output = engine.render(Object.new, strip_filename: strip_filename, strip_volume: volume, strip_number: strip, post_date: post_date,
-									   prev_page: previous_post_filename, next_page: next_post_filename, this_page: page_filename, first_page: first_page,
-									   is_first: is_first, is_last: is_last, is_index: true)
+	output = engine.render(Object.new, 
+						   strip_filename: current_strip.image_name, 
+						   strip_volume: current_strip.volume_number, 
+						   strip_number: current_strip.strip_number, 
+						   post_date: current_strip.post_date,
+						   prev_page: current_strip.prev_page_name, 
+						   next_page: current_strip.next_page_name, 
+						   this_page: current_strip.page_name, 
+						   first_page: first_page,
+						   is_first: current_strip.is_first, 
+						   is_last: current_strip.is_last, 
+						   is_index: true)
 									   	
 		elapsed = Time.now - stopwatch
 		pageTime += elapsed
-		puts "*** Rendered index.html in #{elapsed} seconds."
+		puts "*** Rendered index.html in #{'%.3f' % elapsed} seconds."
 		
 		stopwatch = Time.now							   
 		
@@ -139,37 +188,33 @@ relevant_files.each_with_index do |filename, index|
 		
 		elapsed = Time.now - stopwatch
 		pageTime += elapsed
-		puts "*** Wrote index.html in #{elapsed} seconds."
+		puts "*** Wrote index.html in #{'%.3f' % elapsed} seconds."
 	end
 	
-	if (!File.exists?("#{output_folder}/strips/#{strip_filename}"))
+	if (!File.exists?("#{output_folder}/strips/#{current_strip.image_name}"))
 		stopwatch = Time.now
 		
 		inputImage = ImageList.new("#{input_folder}/#{filename}")
 		
 		elapsed = Time.now - stopwatch
 		stripTime += elapsed
-		puts "*** Read #{filename} in #{elapsed} seconds."
+		puts "*** Read #{filename} in #{'%.3f' % elapsed} seconds."
 		
 		stopwatch = Time.now
 		
-		inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{strip_filename}")
+		inputImage[0].resize_to_fit(940).write("#{output_folder}/strips/#{current_strip.image_name}")
 		
 		elapsed = Time.now - stopwatch
 		stripTime += elapsed
-		puts "*** Created and wrote #{strip_filename} in #{elapsed} seconds."
+		puts "*** Created and wrote #{current_strip.image_name} in #{'%.3f' % elapsed} seconds."
 	end
-	
+
 	puts
-	# puts "Volume: #{volume} Strip: #{strip} Post date: #{post_date}"
-# 	puts "\tis first: #{is_first} is last: #{is_last}"
-# 	puts "\tstrip: #{strip_filename}, page: #{page_filename}"
-# 	puts "\tprevious page: #{previous_post_filename}, next page: #{next_post_filename}"
 
 	post_date = next_post_date
 		
 end #relevant_files.each_with_index
 
 
-puts "BiD Generator finished processing #{relevant_files.count} strips in #{Time.now - startTime} seconds."
-puts "Time spent rendering pages: #{pageTime} seconds | Time spent exporting images: #{stripTime} seconds."
+puts "BiD Generator finished processing #{relevant_files.count} strips in #{'%.3f' % (Time.now - startTime)} seconds."
+puts "Time spent rendering pages: #{'%.3f' % pageTime} seconds | Time spent exporting images: #{'%.3f' % stripTime} seconds."
